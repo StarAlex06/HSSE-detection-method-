@@ -1,4 +1,25 @@
 import numpy as np
+import nltk
+resources = [
+    'averaged_perceptron_tagger',
+    'averaged_perceptron_tagger_eng',
+    'maxent_treebank_pos_tagger',
+    'universal_tagset',
+]
+
+for res in resources:
+    try:
+        print(f"Скачиваю {res}...")
+        nltk.download(res)
+    except Exception as e:
+        print(f"Не удалось скачать {res}: {e}")
+# Скачайте необходимые данные
+nltk.download('punkt')
+nltk.download('punkt_tab')  # новая версия punkt
+nltk.download('stopwords')
+nltk.download('wordnet')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('omw-eng')  # для WordNet
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.preprocessing import StandardScaler, RobustScaler
@@ -15,7 +36,7 @@ def train_stylometric_model_gpu():
     print("🎨 HSSE - ОБУЧЕНИЕ СТИЛОМЕТРИЧЕСКОЙ МОДЕЛИ")
     print("=" * 70)
 
-    if not config.check_data_files():
+    if not config.check_files_exist():
         return
 
     print("📥 Загрузка данных...")
@@ -96,10 +117,10 @@ def train_stylometric_model_gpu():
     # Сохранение моделей
     print("\n💾 Сохранение моделей...")
     joblib.dump(model, config.STYLOMETRIC_MODEL_PATH, compress=3)
-    joblib.dump(scaler, config.STYLOMETRIC_SCALER_PATH, compress=3)
+    joblib.dump(scaler, config.SCALER_PATH, compress=3)
 
     print(f"   Модель: {config.STYLOMETRIC_MODEL_PATH}")
-    print(f"   Scaler: {config.STYLOMETRIC_SCALER_PATH}")
+    print(f"   Scaler: {config.SCALER_PATH}")
 
     # Важность признаков
     feature_importance = pd.DataFrame({

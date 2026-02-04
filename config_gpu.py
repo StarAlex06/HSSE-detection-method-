@@ -97,8 +97,9 @@ class Config:
 
     # Параметры модели
     SEMANTIC_MODEL_NAME = "distilbert-base-uncased"  # Легкая и быстрая модель
+    USE_AMP = True
     MAX_LENGTH = 256  # Уменьшаем для экономии памяти
-    BATCH_SIZE = 8  # Уменьшаем batch size
+    SEMANTIC_BATCH_SIZE = 8  # Уменьшаем batch size
     SEMANTIC_EPOCHS = 3
     LEARNING_RATE = 2e-5
 
