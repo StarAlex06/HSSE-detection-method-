@@ -1,20 +1,13 @@
-# PyTorch с поддержкой CUDA 11.8 (самая стабильная и популярная)
-torch==2.7.1+cu118
-torchvision==0.22.1+cu118
-torchaudio==2.7.1+cu118
---extra-index-url https://download.pytorch.org/whl/cu118
+# ===== HSSE requirements (Colab-friendly) =====
+# NOTE: For Google Colab install in a fresh runtime, then restart runtime once.
 
-# ИЛИ для CUDA 12.1 (если у вас новее):
-# torch==2.7.1+cu121
-# torchvision==0.22.1+cu121
-# torchaudio==2.7.1+cu121
-# --index-url https://download.pytorch.org/whl/cu121
-
-# Transformers и NLP
+# Core DL stack (Colab usually already has torch; keep unpinned to avoid CUDA wheel mismatch)
+torch>=2.2,<2.8
 transformers==4.41.2
 datasets==2.19.1
 sentencepiece==0.2.0
 tokenizers==0.19.1
+accelerate==0.31.0
 
 # Machine Learning
 scikit-learn==1.5.2
@@ -24,7 +17,7 @@ catboost==1.2.5
 
 # Data processing
 pandas==2.2.2
-numpy==1.26.4
+numpy>=1.26,<2.2
 nltk==3.8.1
 openpyxl==3.1.2
 
@@ -36,18 +29,13 @@ plotly==5.24.1
 # Utilities
 tqdm==4.66.5
 joblib==1.4.2
-accelerate==0.31.0
-bitsandbytes==0.43.1
-
-# Для трансформаций и back-translation
-googletrans==4.0.0-rc1
-sacrebleu==2.4.3
-
-# Для работы с Excel/CSV
-openpyxl==3.1.2
-
-# Цветной вывод в консоль
 colorama==0.4.6
 
-# Для веб-интерфейса (если будете использовать)
+# Text transformations / metrics
+sacrebleu==2.4.3
+
+# Compatibility pin: keep modern httpx for Colab ecosystem (openai/gradio)
+httpx>=0.24.1,<1
+
+# Optional web UI
 flask==3.0.3
