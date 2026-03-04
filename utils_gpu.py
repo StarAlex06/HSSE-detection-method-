@@ -65,7 +65,16 @@ def load_data_gpu(file_path: Path, max_samples: Optional[int] = None) -> Tuple[L
             # Пробуем найти альтернативные названия
             alt_names = {
                 'text': ['content', 'sentence', 'document', 'Text', 'Content'],
-                'label': ['target', 'is_ai', 'ai_generated', 'Label', 'Target']
+                'label': [
+                    'target',
+                    'is_ai',
+                    'ai_generated',
+                    'generated',
+                    'Generated',
+                    'LABEL',
+                    'Label',
+                    'Target'
+                ]
             }
 
             found = False

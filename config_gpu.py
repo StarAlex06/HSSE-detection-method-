@@ -58,8 +58,8 @@ class Config:
                     # Проверяем наличие нужных колонок
                     if 'text' not in df_full.columns:
                         print("  ⚠️  Колонка 'text' не найдена!")
-                    if 'label' not in df_full.columns:
-                        print("  ⚠️  Колонка 'label' не найдена!")
+                    if 'label' not in df_full.columns and 'generated' not in df_full.columns:
+                        print("  ⚠️  Колонка 'label' (или альтернатива 'generated') не найдена!")
 
                 except Exception as e:
                     print(f"  ⚠️  Ошибка при чтении файла: {e}")
