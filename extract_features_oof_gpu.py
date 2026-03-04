@@ -58,7 +58,7 @@ class SemanticPredictor:
             input_ids = encoding['input_ids'].to(self.device)
             attention_mask = encoding['attention_mask'].to(self.device)
             if config.USE_AMP and self.device.type == 'cuda':
-                with torch.cuda.amp.autocast():
+                with torch.amp.autocast(device_type='cuda'):
                     outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
             else:
                 outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
@@ -87,18 +87,18 @@ def train_semantic_fold(
     )
 
     optimizer = AdamW(model.parameters(), lr=config.LEARNING_RATE)
-    scaler = torch.cuda.amp.GradScaler() if (config.USE_AMP and config.DEVICE.type == 'cuda') else None
+    scaler = torch.amp.GradScaler('cuda') if (config.USE_AMP and config.DEVICE.type == 'cuda') else None
 
     model.train()
     for _ in range(n_epochs):
-        for batch in loader:
+        for batch in tqdm(loader, desc=f"Semantic train epoch {_ + 1}/{n_epochs}", leave=False):
             optimizer.zero_grad()
             input_ids = batch['input_ids'].to(config.DEVICE)
             attention_mask = batch['attention_mask'].to(config.DEVICE)
             labels = batch['label'].to(config.DEVICE)
 
             if scaler is not None:
-                with torch.cuda.amp.autocast():
+                with torch.amp.autocast(device_type='cuda'):
                     outputs = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
                     loss = outputs.loss
                 scaler.scale(loss).backward()
@@ -243,7 +243,13 @@ def extract_hsse_features_oof(n_splits: int = 5, semantic_fold_epochs: int = 1):
 
         del sem_model
         if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+            try:
+                torch.cuda.empty_cache()
+            except RuntimeError as e:
+                if 'device-side assert triggered' in str(e):
+                    print('⚠️ CUDA в ошибочном состоянии (device-side assert). Продолжаю без empty_cache.')
+                else:
+                    raise
 
     print("\n✅ OOF train features готовы")
 

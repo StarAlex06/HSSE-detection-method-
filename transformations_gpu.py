@@ -22,7 +22,12 @@ class GPUTransformations:
     def __init__(self):
         self.device = config.DEVICE
 
-        # Загружаем модели для back-translation на GPU
+        # Загружаем модели для back-translation на GPU (опционально)
+        if not getattr(config, 'ENABLE_BACK_TRANSLATION', True):
+            print("⚡ Back-translation отключен (config.ENABLE_BACK_TRANSLATION=False)")
+            self.has_translation = False
+            return
+
         print("🌍 Загрузка моделей трансляции для Stability Score...")
 
         try:
@@ -77,6 +82,9 @@ class GPUTransformations:
             return result
 
         except Exception as e:
+            if 'device-side assert triggered' in str(e):
+                self.has_translation = False
+                print('⚠️ Back-translation отключена до перезапуска runtime из-за CUDA device-side assert')
             print(f"Ошибка back-translation: {e}")
             return text
 

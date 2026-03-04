@@ -20,7 +20,10 @@ python extract_features_oof_gpu.py
 - сохраняет артефакты в `models/`.
 <<<<<<< ours
 <<<<<<< ours
+<<<<<<< ours
 =======
+=======
+>>>>>>> theirs
 =======
 >>>>>>> theirs
 
@@ -45,8 +48,11 @@ python run_full_hsse_gpu.py --classic
 
 Этот режим запускает раздельное обучение базовых моделей и обычный `extract_features_gpu.py`.
 <<<<<<< ours
+<<<<<<< ours
 >>>>>>> theirs
 =======
+=======
+>>>>>>> theirs
 
 ## Google Colab: установка без конфликтов
 
@@ -66,4 +72,23 @@ python run_full_hsse_gpu.py
 ```
 
 Если видите warning про "You must restart the runtime", это нормально — просто перезапустите runtime и запустите команды снова.
+<<<<<<< ours
+>>>>>>> theirs
+=======
+
+
+## Если "зависло" в Colab на Step 1 (OOF)
+
+Это обычно не зависание, а очень тяжелые вычисления признаков (перплексия + stability) на большом датасете.
+
+Что уже оптимизировано в коде:
+- back-translation по умолчанию отключен (`ENABLE_BACK_TRANSLATION=False`),
+- исправлена загрузка MLM-модели для перплексии (`AutoModelForMaskedLM`),
+- обновлены AMP-вызовы на современный API `torch.amp.*`,
+- добавлен progress-bar по обучению семантической модели внутри fold.
+
+Для ускоренного прогона можно временно отключить перплексию:
+- в `config_gpu.py` установить `USE_PERPLEXITY_FEATURE = False`.
+
+После отладки верните `USE_PERPLEXITY_FEATURE = True` для полного HSSE-вектора.
 >>>>>>> theirs

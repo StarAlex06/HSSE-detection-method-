@@ -224,6 +224,12 @@ def load_gpu_features(name: str) -> Dict[str, Any]:
 def cleanup_gpu_memory():
     """Очищает память GPU."""
     if torch.cuda.is_available():
-        torch.cuda.empty_cache()
+        try:
+            torch.cuda.empty_cache()
+        except RuntimeError as e:
+            if 'device-side assert triggered' in str(e):
+                print('⚠️ Пропускаю torch.cuda.empty_cache() из-за CUDA device-side assert. Нужен restart runtime.')
+            else:
+                raise
         import gc
         gc.collect()

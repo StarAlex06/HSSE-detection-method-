@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from transformers import GPT2LMHeadModel, GPT2TokenizerFast
-from transformers import BertForMaskedLM, BertTokenizerFast
+from transformers import AutoModelForMaskedLM, AutoTokenizer
 from tqdm import tqdm
 from config_gpu import config
 from utils_gpu import cleanup_gpu_memory
@@ -21,10 +21,10 @@ class GPUPerplexityCalculator:
         self.ar_model = GPT2LMHeadModel.from_pretrained(config.AR_MODEL_NAME).to(self.device)
         self.ar_model.eval()
 
-        # Маскированная модель (BERT)
+        # Маскированная модель (MLM)
         print(f"   Загрузка {config.MLM_MODEL_NAME}...")
-        self.mlm_tokenizer = BertTokenizerFast.from_pretrained(config.MLM_MODEL_NAME)
-        self.mlm_model = BertForMaskedLM.from_pretrained(config.MLM_MODEL_NAME).to(self.device)
+        self.mlm_tokenizer = AutoTokenizer.from_pretrained(config.MLM_MODEL_NAME)
+        self.mlm_model = AutoModelForMaskedLM.from_pretrained(config.MLM_MODEL_NAME).to(self.device)
         self.mlm_model.eval()
 
         print(f"✅ Модели загружены на {self.device}")
@@ -37,7 +37,11 @@ class GPUPerplexityCalculator:
 
             with torch.no_grad():
                 if config.USE_AMP and config.DEVICE.type == 'cuda':
+<<<<<<< ours
                     with torch.cuda.amp.autocast():
+=======
+                    with torch.amp.autocast(device_type='cuda'):
+>>>>>>> theirs
                         outputs = self.ar_model(input_ids, labels=input_ids)
                 else:
                     outputs = self.ar_model(input_ids, labels=input_ids)
@@ -65,7 +69,11 @@ class GPUPerplexityCalculator:
 
             with torch.no_grad():
                 if config.USE_AMP and config.DEVICE.type == 'cuda':
+<<<<<<< ours
                     with torch.cuda.amp.autocast():
+=======
+                    with torch.amp.autocast(device_type='cuda'):
+>>>>>>> theirs
                         outputs = self.mlm_model(input_tensor)
                 else:
                     outputs = self.mlm_model(input_tensor)
@@ -93,6 +101,9 @@ class GPUPerplexityCalculator:
 
         Δ_ppl(x) = log(PPL_AR(x)) - log(PPL_MLM(x))
         """
+        if not getattr(config, 'USE_PERPLEXITY_FEATURE', True):
+            return 0.0
+
         ppl_ar = self.calculate_perplexity_ar(text)
         ppl_mlm = self.calculate_perplexity_mlm(text)
 

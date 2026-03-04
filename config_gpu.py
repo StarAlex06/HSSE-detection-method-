@@ -113,6 +113,15 @@ class Config:
 
     # Количество текстовых трансформаций для признака Stability
     N_TRANSFORMATIONS = 3
+<<<<<<< ours
+=======
+
+    # Ускорение пайплайна в Colab: отключает тяжелый back-translation
+    ENABLE_BACK_TRANSLATION = False
+
+    # Можно временно выключить перплексию для отладки/быстрого прогона
+    USE_PERPLEXITY_FEATURE = True
+>>>>>>> theirs
 
     # Параметры для стилометрических признаков
     STYLOMETRIC_FEATURES = [
