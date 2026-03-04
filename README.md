@@ -18,3 +18,27 @@ python extract_features_oof_gpu.py
 - строит `hsse_train` через out-of-fold,
 - строит `hsse_val`/`hsse_test` моделями, обученными на полном `train`,
 - сохраняет артефакты в `models/`.
+<<<<<<< ours
+=======
+
+## Запуск в одну команду
+
+### Рекомендуемый режим (без утечек)
+
+```bash
+python run_full_hsse_gpu.py
+```
+
+По умолчанию этот запуск использует OOF-пайплайн:
+1) `extract_features_oof_gpu.py`
+2) `train_meta_gpu.py`
+3) `evaluate_gpu.py`
+
+### Классический режим
+
+```bash
+python run_full_hsse_gpu.py --classic
+```
+
+Этот режим запускает раздельное обучение базовых моделей и обычный `extract_features_gpu.py`.
+>>>>>>> theirs

@@ -1,6 +1,7 @@
 import time
 import sys
 from pathlib import Path
+import argparse
 
 print("=" * 80)
 print("🚀 HSSE - ПОЛНЫЙ ПАЙПЛАЙН ОБНАРУЖЕНИЯ AI-ТЕКСТОВ НА GPU")
@@ -21,10 +22,28 @@ print(f"   Mixed Precision: {config.USE_AMP}")
 print(f"   Признаки HSSE: 4")
 
 
-def run_pipeline():
-    """Запускает полный пайплайн HSSE."""
+def build_steps(use_oof: bool):
+    """Собирает шаги пайплайна: без утечек (OOF) или классический режим."""
+    if use_oof:
+        return [
+            {
+                "name": "1. OOF-извлечение HSSE признаков (без утечки)",
+                "module": "extract_features_oof_gpu",
+                "function": "extract_hsse_features_oof"
+            },
+            {
+                "name": "2. Обучение мета-классификатора",
+                "module": "train_meta_gpu",
+                "function": "train_meta_classifier_gpu"
+            },
+            {
+                "name": "3. Финальная оценка",
+                "module": "evaluate_gpu",
+                "function": "evaluate_hsse_gpu"
+            }
+        ]
 
-    steps = [
+    return [
         {
             "name": "1. Обучение семантической модели",
             "module": "train_semantic_gpu",
@@ -52,7 +71,14 @@ def run_pipeline():
         }
     ]
 
-    print("\n📋 Шаги пайплайна:")
+
+def run_pipeline(use_oof: bool = True):
+    """Запускает полный пайплайн HSSE."""
+    steps = build_steps(use_oof)
+
+    mode_name = "OOF (без утечек)" if use_oof else "Классический"
+    print(f"\n🧭 Режим запуска: {mode_name}")
+    print("📋 Шаги пайплайна:")
     for step in steps:
         print(f"   {step['name']}")
 
@@ -112,6 +138,14 @@ print(f"Вероятность AI: {result:.3f}")
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Запуск полного HSSE пайплайна")
+    parser.add_argument(
+        "--classic",
+        action="store_true",
+        help="Классический режим (с отдельным обучением базовых моделей). По умолчанию OOF без утечек."
+    )
+    args = parser.parse_args()
+
     # Проверяем наличие данных
     if not config.check_files_exist():
         print("❌ Ошибка: файлы данных не найдены!")
@@ -119,4 +153,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Запускаем пайплайн
-    run_pipeline()
+    run_pipeline(use_oof=not args.classic)
