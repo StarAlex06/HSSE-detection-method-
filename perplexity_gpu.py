@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from contextlib import nullcontext
 from transformers import GPT2LMHeadModel, GPT2TokenizerFast
 from transformers import AutoModelForMaskedLM, AutoTokenizer
 from tqdm import tqdm
@@ -29,6 +30,17 @@ class GPUPerplexityCalculator:
 
         print(f"✅ Модели загружены на {self.device}")
 
+    @staticmethod
+    def _autocast_context():
+        """Возвращает совместимый контекст AMP для CUDA."""
+        amp_module = getattr(torch, 'amp', None)
+        if amp_module is not None and hasattr(amp_module, 'autocast'):
+            return torch.amp.autocast(device_type='cuda')
+        cuda_amp = getattr(torch.cuda, 'amp', None)
+        if cuda_amp is not None and hasattr(cuda_amp, 'autocast'):
+            return torch.cuda.amp.autocast()
+        return nullcontext()
+
     def calculate_perplexity_ar(self, text: str) -> float:
         """Вычисляет перплексию с помощью авторегрессионной модели."""
         try:
@@ -37,11 +49,7 @@ class GPUPerplexityCalculator:
 
             with torch.no_grad():
                 if config.USE_AMP and config.DEVICE.type == 'cuda':
-<<<<<<< ours
-                    with torch.cuda.amp.autocast():
-=======
-                    with torch.amp.autocast(device_type='cuda'):
->>>>>>> theirs
+                    with self._autocast_context():
                         outputs = self.ar_model(input_ids, labels=input_ids)
                 else:
                     outputs = self.ar_model(input_ids, labels=input_ids)
@@ -69,11 +77,7 @@ class GPUPerplexityCalculator:
 
             with torch.no_grad():
                 if config.USE_AMP and config.DEVICE.type == 'cuda':
-<<<<<<< ours
-                    with torch.cuda.amp.autocast():
-=======
-                    with torch.amp.autocast(device_type='cuda'):
->>>>>>> theirs
+                    with self._autocast_context():
                         outputs = self.mlm_model(input_tensor)
                 else:
                     outputs = self.mlm_model(input_tensor)
