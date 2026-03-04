@@ -36,7 +36,7 @@ class GPUPerplexityCalculator:
             input_ids = encodings.input_ids.to(self.device)
 
             with torch.no_grad():
-                if config.USE_AMP:
+                if config.USE_AMP and config.DEVICE.type == 'cuda':
                     with torch.cuda.amp.autocast():
                         outputs = self.ar_model(input_ids, labels=input_ids)
                 else:
@@ -64,7 +64,7 @@ class GPUPerplexityCalculator:
             input_tensor = torch.tensor([input_ids]).to(self.device)
 
             with torch.no_grad():
-                if config.USE_AMP:
+                if config.USE_AMP and config.DEVICE.type == 'cuda':
                     with torch.cuda.amp.autocast():
                         outputs = self.mlm_model(input_tensor)
                 else:

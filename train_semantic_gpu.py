@@ -193,7 +193,7 @@ def train_semantic_model_gpu():
                 attention_mask = batch['attention_mask'].to(config.DEVICE, non_blocking=True)
                 labels = batch['label'].to(config.DEVICE, non_blocking=True)
 
-                if config.USE_AMP:
+                if config.USE_AMP and config.DEVICE.type == 'cuda':
                     with torch.cuda.amp.autocast():
                         outputs = model(
                             input_ids=input_ids,

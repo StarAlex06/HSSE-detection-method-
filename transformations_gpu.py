@@ -53,7 +53,7 @@ class GPUTransformations:
             batch = {k: v.to(self.device) for k, v in batch.items()}
 
             with torch.no_grad():
-                if config.USE_AMP:
+                if config.USE_AMP and config.DEVICE.type == 'cuda':
                     with torch.cuda.amp.autocast():
                         translated = self.en_de_model.generate(**batch)
                 else:
@@ -66,7 +66,7 @@ class GPUTransformations:
             batch = {k: v.to(self.device) for k, v in batch.items()}
 
             with torch.no_grad():
-                if config.USE_AMP:
+                if config.USE_AMP and config.DEVICE.type == 'cuda':
                     with torch.cuda.amp.autocast():
                         back_translated = self.de_en_model.generate(**batch)
                 else:

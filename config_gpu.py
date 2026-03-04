@@ -91,13 +91,16 @@ class Config:
     SEMANTIC_MODEL_PATH = MODELS_DIR / "semantic_model"
     STYLOMETRIC_MODEL_PATH = MODELS_DIR / "stylometric_model.pkl"
     SCALER_PATH = MODELS_DIR / "scaler.pkl"
+    # Алиас для обратной совместимости (используется в extract/evaluate)
+    STYLOMETRIC_SCALER_PATH = SCALER_PATH
     META_MODEL_PATH = MODELS_DIR / "meta_model.pkl"
     FEATURES_DIR = MODELS_DIR / "features"
     FEATURES_DIR.mkdir(exist_ok=True)
 
     # Параметры модели
     SEMANTIC_MODEL_NAME = "distilbert-base-uncased"  # Легкая и быстрая модель
-    USE_AMP = True
+    # AMP имеет смысл только при наличии CUDA
+    USE_AMP = torch.cuda.is_available()
     MAX_LENGTH = 256  # Уменьшаем для экономии памяти
     SEMANTIC_BATCH_SIZE = 8  # Уменьшаем batch size
     SEMANTIC_EPOCHS = 3
@@ -106,6 +109,10 @@ class Config:
     # Параметры для перплексии
     AR_MODEL_NAME = "distilgpt2"  # Легкая модель GPT-2
     MLM_MODEL_NAME = "distilbert-base-uncased"  # Легкая модель BERT
+    PERPLEXITY_BATCH_SIZE = 8
+
+    # Количество текстовых трансформаций для признака Stability
+    N_TRANSFORMATIONS = 3
 
     # Параметры для стилометрических признаков
     STYLOMETRIC_FEATURES = [

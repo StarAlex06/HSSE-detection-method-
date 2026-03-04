@@ -17,8 +17,18 @@ class SemanticModelGPU:
 
     def __init__(self, model_path):
         self.device = config.DEVICE
-        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
-        self.model = AutoModelForSequenceClassification.from_pretrained(model_path).to(self.device)
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+            self.model = AutoModelForSequenceClassification.from_pretrained(model_path).to(self.device)
+            print(f"   ✅ Семантическая модель загружена из {model_path}")
+        except Exception as e:
+            print(f"   ⚠️ Не удалось загрузить модель из {model_path}: {e}")
+            print(f"   ↪ Загружаю базовую модель {config.SEMANTIC_MODEL_NAME}")
+            self.tokenizer = AutoTokenizer.from_pretrained(config.SEMANTIC_MODEL_NAME)
+            self.model = AutoModelForSequenceClassification.from_pretrained(
+                config.SEMANTIC_MODEL_NAME,
+                num_labels=2
+            ).to(self.device)
         self.model.eval()
 
     def predict_proba(self, text: str) -> float:
@@ -35,7 +45,7 @@ class SemanticModelGPU:
             input_ids = encoding['input_ids'].to(self.device)
             attention_mask = encoding['attention_mask'].to(self.device)
 
-            if config.USE_AMP:
+            if config.USE_AMP and self.device.type == 'cuda':
                 with torch.cuda.amp.autocast():
                     outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
             else:
@@ -61,7 +71,7 @@ class HSSEFeatureExtractorGPU:
         # 2. Загружаем стилометрическую модель
         print("2️⃣  Загрузка стилометрической модели...")
         self.stylometric_model = joblib.load(config.STYLOMETRIC_MODEL_PATH)
-        self.stylometric_scaler = joblib.load(config.STYLOMETRIC_SCALER_PATH)
+        self.stylometric_scaler = joblib.load(config.SCALER_PATH)
 
         # 3. Инициализируем калькулятор перплексии
         print("3️⃣  Инициализация калькулятора перплексии...")

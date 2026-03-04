@@ -113,7 +113,7 @@ print(f"Вероятность AI: {result:.3f}")
 
 if __name__ == "__main__":
     # Проверяем наличие данных
-    if not config.check_data_files():
+    if not config.check_files_exist():
         print("❌ Ошибка: файлы данных не найдены!")
         print("Убедитесь, что в папке 'data' есть файлы train.csv, val.csv, test.csv")
         sys.exit(1)

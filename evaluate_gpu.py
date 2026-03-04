@@ -26,15 +26,26 @@ class HSSEDetectorGPU:
 
         # Загружаем семантическую модель
         from transformers import AutoTokenizer, AutoModelForSequenceClassification
-        self.semantic_tokenizer = AutoTokenizer.from_pretrained(config.SEMANTIC_MODEL_PATH)
-        self.semantic_model = AutoModelForSequenceClassification.from_pretrained(
-            config.SEMANTIC_MODEL_PATH
-        ).to(config.DEVICE)
+        try:
+            self.semantic_tokenizer = AutoTokenizer.from_pretrained(config.SEMANTIC_MODEL_PATH)
+            self.semantic_model = AutoModelForSequenceClassification.from_pretrained(
+                config.SEMANTIC_MODEL_PATH
+            ).to(config.DEVICE)
+            print(f"   ✅ Семантическая модель загружена из {config.SEMANTIC_MODEL_PATH}")
+        except Exception as e:
+            print(f"   ⚠️ Не удалось загрузить модель из {config.SEMANTIC_MODEL_PATH}: {e}")
+            print(f"   ↪ Загружаю базовую модель {config.SEMANTIC_MODEL_NAME}")
+            self.semantic_tokenizer = AutoTokenizer.from_pretrained(config.SEMANTIC_MODEL_NAME)
+            self.semantic_model = AutoModelForSequenceClassification.from_pretrained(
+                config.SEMANTIC_MODEL_NAME,
+                num_labels=2
+            ).to(config.DEVICE)
+
         self.semantic_model.eval()
 
         # Загружаем стилометрическую модель
         self.stylometric_model = joblib.load(config.STYLOMETRIC_MODEL_PATH)
-        self.stylometric_scaler = joblib.load(config.STYLOMETRIC_SCALER_PATH)
+        self.stylometric_scaler = joblib.load(config.SCALER_PATH)
 
         # Инициализируем перплексию и трансформации
         self.perplexity_calc = get_perplexity_calculator()
@@ -59,7 +70,7 @@ class HSSEDetectorGPU:
             input_ids = encoding['input_ids'].to(config.DEVICE)
             attention_mask = encoding['attention_mask'].to(config.DEVICE)
 
-            if config.USE_AMP:
+            if config.USE_AMP and config.DEVICE.type == 'cuda':
                 with torch.cuda.amp.autocast():
                     outputs = self.semantic_model(input_ids=input_ids, attention_mask=attention_mask)
             else:
@@ -100,7 +111,7 @@ class HSSEDetectorGPU:
                     input_ids = encoding['input_ids'].to(config.DEVICE)
                     attention_mask = encoding['attention_mask'].to(config.DEVICE)
 
-                    if config.USE_AMP:
+                    if config.USE_AMP and config.DEVICE.type == 'cuda':
                         with torch.cuda.amp.autocast():
                             outputs = self.semantic_model(input_ids=input_ids, attention_mask=attention_mask)
                     else:
