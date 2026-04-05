@@ -556,5 +556,5 @@ html_report = f"""
 with open('visuals/report.html', 'w', encoding='utf-8') as f:
     f.write(html_report)
 
-print("✅ Отчет сохранен в visuals/report.html")
-print("✅ Все графики сохранены в папке visuals/")
+print("Отчет сохранен в visuals/report.html")
+print(" Все графики сохранены в папке visuals/")

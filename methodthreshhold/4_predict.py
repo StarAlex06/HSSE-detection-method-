@@ -83,9 +83,8 @@ if __name__ == "__main__":
     print("\n" + "=" * 50)
     print("РЕЗУЛЬТАТ АНАЛИЗА")
     print("=" * 50)
-    print(f"Текст {'🤖 ИИ' if result['is_ai'] else '👤 ЧЕЛОВЕК'}")
+    print(f"Текст {' ИИ' if result['is_ai'] else ' ЧЕЛОВЕК'}")
     print("\nВероятности (чем выше, тем больше похоже на ИИ):")
     for name, prob in result['probabilities'].items():
-        signal = "⚠️" if result['signals'][name] else "✓"
-        print(f"  {name.capitalize():12}: {prob:.3f}  {signal}")
-    print("\n(⚠️ - признак превысил порог и подал сигнал)")
+        print(f"  {name.capitalize():12}: {prob:.3f} ")
+    print("\n(признак превысил порог и подал сигнал)")
