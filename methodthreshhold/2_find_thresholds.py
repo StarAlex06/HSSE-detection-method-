@@ -48,7 +48,7 @@ p_stability = model_stability.predict_proba(X_stability_val_scaled)[:, 1]
 
 # --- Поиск оптимальных порогов ---
 # Для ускорения будем перебирать не все комбинации, а оптимизировать последовательно
-# Но для наглядности сделаем упрощенный вариант
+
 
 print("Поиск оптимальных порогов (это может занять минуту)...")
 
@@ -59,8 +59,7 @@ best_precision = 0
 # Сетка порогов для перебора
 thresholds = np.arange(0.3, 0.9, 0.05)
 
-# Перебираем все комбинации? Их может быть много (12^4 = 20736)
-# Для простоты переберем с помощью циклов (можно заменить на оптимизатор)
+
 for t1 in tqdm(thresholds, desc="Стилометрия"):
     for t2 in thresholds:
         for t3 in thresholds:
@@ -73,7 +72,7 @@ for t1 in tqdm(thresholds, desc="Стилометрия"):
                 current_f1 = f1_score(y_val, final_pred)
                 current_precision = precision_score(y_val, final_pred)
 
-                # Мы хотим максимизировать F1, но можно добавить условие на минимальную точность
+                # Мы хотим максимизировать F1
                 if current_f1 > best_f1:
                     best_f1 = current_f1
                     best_precision = current_precision

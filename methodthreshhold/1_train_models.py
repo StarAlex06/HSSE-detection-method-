@@ -26,7 +26,7 @@ df = pd.read_csv('train.csv')
 texts = df['text'].tolist()
 y = df['label'].values
 
-# --- 1. Стилометрия и Стабильность (быстро, на CPU) ---
+# --- 1. Стилометрия и Стабильность ---
 print("Извлечение стилометрии и стабильности...")
 X_style = []
 X_stability = []
@@ -54,7 +54,7 @@ X_perplexity = extract_perplexity_batch(texts, batch_size=8)
 # --- Освобождаем GPU память ---
 torch.cuda.empty_cache()
 
-# --- Масштабирование и обучение моделей (как раньше) ---
+# --- Масштабирование и обучение моделей  ---
 print("Масштабирование признаков...")
 scaler_style = StandardScaler().fit(X_style)
 scaler_semantic = StandardScaler().fit(X_semantic)
@@ -66,7 +66,7 @@ X_semantic_scaled = scaler_semantic.transform(X_semantic)
 X_perplexity_scaled = scaler_perplexity.transform(X_perplexity)
 X_stability_scaled = scaler_stability.transform(X_stability)
 
-# --- Обучение моделей (на CPU, т.к. данные небольшие) ---
+# --- Обучение моделей  ---
 print("Обучение моделей...")
 model_style = LogisticRegression(random_state=42).fit(X_style_scaled, y)
 model_semantic = LogisticRegression(random_state=42).fit(X_semantic_scaled, y)

@@ -46,7 +46,7 @@ try:
     rubert_model.eval()
     print("   ✓ ruBERT загружен")
 except:
-    print("   ⚠ Ошибка, используем упрощенную версию")
+    print("   Ошибка, используем упрощенную версию")
     rubert_tokenizer = None
     rubert_model = None
 
@@ -56,9 +56,9 @@ try:
     gpt2_model_ru = GPT2LMHeadModel.from_pretrained("sberbank-ai/rugpt3small_based_on_gpt2").to(device)
     gpt2_model_ru.eval()
     gpt2_tokenizer_ru.pad_token = gpt2_tokenizer_ru.eos_token
-    print("   ✓ ruGPT3 загружена")
+    print("    ruGPT3 загружена")
 except:
-    print("   ⚠ Ошибка, используем упрощенную версию")
+    print("    Ошибка, используем упрощенную версию")
     gpt2_tokenizer_ru = None
     gpt2_model_ru = None
 
@@ -66,9 +66,9 @@ print("\n3. Загрузка ruBERT MLM (для перплексии)...")
 try:
     bert_mlm_ru = AutoModelForMaskedLM.from_pretrained("DeepPavlov/rubert-base-cased").to(device)
     bert_mlm_ru.eval()
-    print("   ✓ ruBERT MLM загружена")
+    print("    ruBERT MLM загружена")
 except:
-    print("   ⚠ Ошибка, используем упрощенную версию")
+    print("    Ошибка, используем упрощенную версию")
     bert_mlm_ru = None
 
 # ==============================
@@ -214,26 +214,33 @@ def stylometric_features_russian(text):
 # ==============================
 
 def malicious_intent_score_ru(text):
-    """Оценка вредоносности"""
     text_lower = text.lower()
+
+    # Веса
+    WEIGHTS = {
+        'financial': 0.50,
+        'credentials': 0.35,
+        'urgency': 0.15
+    }
+
     score = 0.0
-    
-    financial = [r'\d+\s*(руб|рублей)', r'перевес', r'перевод', r'счет\s*\d+', r'оплат', r'деньги']
-    for pattern in financial:
-        if re.search(pattern, text_lower):
-            score += 0.25
-    
-    credentials = [r'парол', r'логин', r'доступ', r'код', r'аккаунт']
-    for pattern in credentials:
-        if re.search(pattern, text_lower):
-            score += 0.2
-    
-    urgency = ['срочно', 'немедленно', 'сейчас же']
-    for word in urgency:
-        if word in text_lower:
-            score += 0.1
-    
-    return min(score, 1.0)
+
+    # Финансовые паттерны
+    financial_patterns = [r'\d+\s*(руб|рублей)', r'перевес', r'перевод', r'счет\s*\d+', r'оплат', r'деньги']
+    if any(re.search(pattern, text_lower) for pattern in financial_patterns):
+        score += WEIGHTS['financial']
+
+    # Паттерны учетных данных
+    credential_patterns = [r'парол', r'логин', r'доступ', r'код', r'аккаунт']
+    if any(re.search(pattern, text_lower) for pattern in credential_patterns):
+        score += WEIGHTS['credentials']
+
+    # Слова срочности
+    urgency_words = ['срочно', 'немедленно', 'сейчас же']
+    if any(word in text_lower for word in urgency_words):
+        score += WEIGHTS['urgency']
+
+    return score
 
 def social_engineering_score_ru(text):
     """Оценка социальной инженерии"""
@@ -383,13 +390,13 @@ class RealisticDeepfakeDetector:
         attack_prob = self.predict_attack_probability(text)
         
         if ai_prob > 0.5 and attack_prob > 0.45:
-            verdict = "⚠️ ДИПФЕЙК-АТАКА"
+            verdict = " ДИПФЕЙК-АТАКА"
             confidence = (ai_prob + attack_prob) / 2
         elif ai_prob > 0.5:
-            verdict = "🤖 AI-ТЕКСТ (не атака)"
+            verdict = " AI-ТЕКСТ (не атака)"
             confidence = ai_prob
         else:
-            verdict = "👤 ТЕКСТ ЧЕЛОВЕКА"
+            verdict = " ТЕКСТ ЧЕЛОВЕКА"
             confidence = 1 - ai_prob
         
         return {

@@ -32,10 +32,6 @@ train = pd.read_csv("data/train.csv")
 val = pd.read_csv("data/val.csv")
 test = pd.read_csv("data/test.csv")
 
-# РЕКОМЕНДУЮ ДЛЯ ОТЛАДКИ (можешь убрать потом)
-#train = train.sample(500)
-#val = val.sample(200)
-#test = test.sample(200)
 
 
 # ==============================
@@ -191,7 +187,7 @@ def stability_feature(text, emb1):
 
 
 # ==============================
-# 7. FEATURE EXTRACTION (ИСПРАВЛЕННАЯ)
+# 7. FEATURE EXTRACTION
 # ==============================
 def extract_features(df):
     features = []
@@ -200,24 +196,15 @@ def extract_features(df):
 
     for idx, text in enumerate(tqdm(df["text"], desc="Processing texts")):
         try:
-            # Стилометрия
             style = stylometric_features(text)
-
-            # Семантические признаки (BERT)
             semantic = get_bert_embedding(text)
-
-            # Perplexity
             perp = [perplexity_feature(text)]
-
             stability = [stability_feature(text, semantic)]
-
-            # Конкатенация
             vector = np.concatenate([style, semantic, perp, stability])
             features.append(vector)
 
         except Exception as e:
             print(f"Error processing text {idx}: {e}")
-            # В случае ошибки добавляем нулевой вектор
             features.append(np.zeros(768 + len(stylometric_features("test")) + 2))
 
     return np.array(features)
@@ -283,7 +270,6 @@ def plot_roc_curve(X, y, name):
     plt.title(f"ROC Curve ({name})")
     plt.legend()
     plt.show()
-
 
 evaluate(X_train, y_train, "TRAIN")
 evaluate(X_val, y_val, "VAL")
