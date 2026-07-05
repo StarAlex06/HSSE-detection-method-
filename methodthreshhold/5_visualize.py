@@ -25,7 +25,7 @@ plt.rcParams['font.size'] = 12
 print("Загрузка данных и моделей...")
 
 # Загружаем тестовые данные
-df_test = pd.read_csv('test.csv')
+df_test = pd.read_csv('test.csv', sep=';')
 texts_test = df_test['text'].tolist()
 y_test = df_test['label'].values
 

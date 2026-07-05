@@ -1,94 +1,134 @@
-# HSSE-detection-method-
+# HSSE Detection Method
 
-Метод детекции AI-текстов на основе 4 признаков:
-1. Semantic score
-2. Stylometric score
-3. Perplexity gap
-4. Stability score
+Метод для определения AI-сгенерированных текстов по четырём независимым группам признаков:
 
-## Важно: extraction без leakage
+1. **Stylometric** - длина предложений и слов, лексическое разнообразие, пунктуация.
+2. **Semantic** - статистики sentence embeddings и связность соседних предложений.
+3. **Perplexity** - признаки на основе языковой модели GPT-2.
+4. **Stability** - устойчивость структуры текста: вариативность предложений, повторяемость слов, простые морфологические признаки.
 
-Чтобы train-признаки не были обучены на тех же самых объектах, используйте OOF-скрипт:
+Каждая группа признаков обучает отдельную логистическую регрессию. Итоговое решение принимается по правилу **OR**: текст считается AI-сгенерированным, если хотя бы одна модель превысила свой оптимальный порог.
 
-```bash
-python extract_features_oof_gpu.py
+## Структура проекта
+
+```text
+.
+├── README.md
+├── requirements.txt
+└── methodthreshhold/
+    ├── 1_train_models.py       # обучение 4 моделей и scaler'ов
+    ├── 2_find_thresholds.py    # подбор порогов на validation split
+    ├── 3_evaluate.py           # оценка на test split
+    ├── 4_predict.py            # предсказание для одного текста
+    ├── 5_visualize.py          # графики и HTML-отчёт
+    ├── utils.py                # извлечение признаков
+    ├── train.csv
+    ├── val.csv
+    ├── test.csv
+    ├── thresholds.json
+    ├── model_*.pkl
+    ├── scaler_*.pkl
+    └── visuals/
 ```
 
-Он:
-- строит `hsse_train` через out-of-fold,
-- строит `hsse_val`/`hsse_test` моделями, обученными на полном `train`,
-- сохраняет артефакты в `models/`.
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-=======
-=======
->>>>>>> theirs
-=======
->>>>>>> theirs
+> Папка `methodthreshhold` оставлена как есть, чтобы не ломать уже сохранённые артефакты и привычные пути. Рабочий метод находится именно в ней.
 
-## Запуск в одну команду
+## Установка
 
-### Рекомендуемый режим (без утечек)
+Рекомендуется использовать отдельное окружение Python 3.10+.
 
 ```bash
-python run_full_hsse_gpu.py
+pip install -r requirements.txt
 ```
 
-По умолчанию этот запуск использует OOF-пайплайн:
-1) `extract_features_oof_gpu.py`
-2) `train_meta_gpu.py`
-3) `evaluate_gpu.py`
+Первый запуск скачает модели `paraphrase-multilingual-MiniLM-L12-v2` и `gpt2` из Hugging Face. Если доступна CUDA, вычисления пойдут на GPU, иначе на CPU.
 
-### Классический режим
+## Данные
+
+Скрипты ожидают CSV-файлы внутри `methodthreshhold/`:
+
+- `train.csv` - обучение моделей;
+- `val.csv` - подбор порогов;
+- `test.csv` - финальная оценка.
+
+Обязательные колонки:
+
+- `text` - текст;
+- `label` - метка класса, где `0` означает человек, `1` означает AI.
+
+В текущем проекте `train.csv` и `val.csv` используют запятую как разделитель, а `test.csv` использует точку с запятой. Это уже учтено в скриптах оценки и визуализации.
+
+## Запуск полного пайплайна
+
+Все команды ниже выполняются из папки метода:
 
 ```bash
-python run_full_hsse_gpu.py --classic
+cd methodthreshhold
 ```
 
-Этот режим запускает раздельное обучение базовых моделей и обычный `extract_features_gpu.py`.
-<<<<<<< ours
-<<<<<<< ours
->>>>>>> theirs
-=======
-=======
->>>>>>> theirs
-
-## Google Colab: установка без конфликтов
-
-1. Включите GPU: `Runtime -> Change runtime type -> GPU`.
-2. Установите зависимости:
+1. Обучить модели:
 
 ```bash
-pip install -U pip
-pip install -r requirements_gpu.txt
+python 1_train_models.py
 ```
 
-3. Перезапустите runtime (обязательно после установки).
-4. Запустите пайплайн:
+Скрипт сохранит:
+
+- `model_style.pkl`
+- `model_semantic.pkl`
+- `model_perplexity.pkl`
+- `model_stability.pkl`
+- `scaler_style.pkl`
+- `scaler_semantic.pkl`
+- `scaler_perplexity.pkl`
+- `scaler_stability.pkl`
+
+2. Подобрать пороги на validation split:
 
 ```bash
-python run_full_hsse_gpu.py
+python 2_find_thresholds.py
 ```
 
-Если видите warning про "You must restart the runtime", это нормально — просто перезапустите runtime и запустите команды снова.
-<<<<<<< ours
->>>>>>> theirs
-=======
+Результат сохраняется в `thresholds.json`.
 
+3. Оценить качество на test split:
 
-## Если "зависло" в Colab на Step 1 (OOF)
+```bash
+python 3_evaluate.py
+```
 
-Это обычно не зависание, а очень тяжелые вычисления признаков (перплексия + stability) на большом датасете.
+4. Построить графики и HTML-отчёт:
 
-Что уже оптимизировано в коде:
-- back-translation по умолчанию отключен (`ENABLE_BACK_TRANSLATION=False`),
-- исправлена загрузка MLM-модели для перплексии (`AutoModelForMaskedLM`),
-- обновлены AMP-вызовы на современный API `torch.amp.*`,
-- добавлен progress-bar по обучению семантической модели внутри fold.
+```bash
+python 5_visualize.py
+```
 
-Для ускоренного прогона можно временно отключить перплексию:
-- в `config_gpu.py` установить `USE_PERPLEXITY_FEATURE = False`.
+Результаты сохраняются в `methodthreshhold/visuals/`.
 
-После отладки верните `USE_PERPLEXITY_FEATURE = True` для полного HSSE-вектора.
->>>>>>> theirs
+## Предсказание одного текста
+
+Можно передать путь к текстовому файлу:
+
+```bash
+python 4_predict.py path/to/text.txt
+```
+
+Или запустить без аргументов и вставить текст вручную:
+
+```bash
+python 4_predict.py
+```
+
+Скрипт выводит итоговый класс, вероятности по четырём моделям, пороги и признаки, которые сработали.
+
+## Что было убрано
+
+Из проекта удалены старые экспериментальные ветки и дубли:
+
+- `method1/` - отдельный LightGBM-эксперимент, не связанный с текущим пороговым методом;
+- `deepfakemethod/*.py` - демонстрационный детектор deepfake-атак, другая задача и другая логика;
+- `data/` - дублирующие CSV для старого эксперимента;
+- служебные файлы `.idea/`;
+- временные тестовые `.txt` и диагностические скрипты, не входящие в основной пайплайн.
+
+Основной поддерживаемый метод теперь один: `methodthreshhold/1_train_models.py` -> `2_find_thresholds.py` -> `3_evaluate.py` -> `4_predict.py` / `5_visualize.py`.
